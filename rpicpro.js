@@ -59,7 +59,19 @@ export default {
         }
 
         if (!isHasTableName) {
-            const defaultTables = env.DEFAULT_TABLES.split(',').map(part => part.trim());
+            let defaultTableRaw = "";
+            try {
+                defaultTableRaw = env.DEFAULT_TABLES;
+            }
+            catch {
+                return new Response('请联系管理员：“你忘了设置参数 DEFAULT_TABLES ”', {
+                    status: 500,
+                    headers: {
+                        'Content-Type': 'text/plain; charset=utf-8',
+                    },
+                });
+            }
+            const defaultTables = defaultTableRaw.split(',').map(part => part.trim());
             defaultTables.forEach((tableName) => {
                 // 构建 SQL 查询语句
                 let sql = "select";
@@ -94,12 +106,10 @@ export default {
             statementsPrepared.push(env.PIC_DB.prepare(builtSql));
         }
         var rowsList
-        try
-        {
+        try {
             rowsList = await env.PIC_DB.batch(statementsPrepared);
         }
-        catch (error)
-        {
+        catch (error) {
             return new Response('SQL 查询失败。请先检查你的 SQL 是否有误；如果确认无误，请联系管理员。', {
                 status: 400,
                 headers: {
