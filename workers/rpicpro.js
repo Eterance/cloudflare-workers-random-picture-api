@@ -29,10 +29,20 @@ export default {
         //return Response.json(env.DEFAULT_TABLES);
         var tableNamesArray = [];
         // 获取所有目前存在的表名
-        const tableNameRows = await env.PIC_DB.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name != '_cf_KV' AND name NOT LIKE 'sqlite_%';").all();
-        for (let index = 0; index < tableNameRows.results.length; index++) {
-            const tableNameRow = tableNameRows.results[index];
-            tableNamesArray.push(tableNameRow.name);
+        try{
+            const tableNameRows = await env.PIC_DB.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name != '_cf_KV' AND name NOT LIKE 'sqlite_%';").all();
+            for (let index = 0; index < tableNameRows.results.length; index++) {
+                const tableNameRow = tableNameRows.results[index];
+                tableNamesArray.push(tableNameRow.name);
+            }
+        }
+        catch{
+            return new Response('服务器内部错误，这不是你的错。请联系管理员：“你忘了绑定 D1 数据库至参数 PIC_DB ”', {
+                status: 500,
+                headers: {
+                    'Content-Type': 'text/plain; charset=utf-8',
+                },
+            });
         }
 
         let isHasTableName = false;
@@ -64,7 +74,7 @@ export default {
                 defaultTableRaw = env.DEFAULT_TABLES;
             }
             catch {
-                return new Response('请联系管理员：“你忘了设置参数 DEFAULT_TABLES ”', {
+                return new Response('服务器内部错误，这不是你的错。请联系管理员：“你忘了设置参数 DEFAULT_TABLES ”', {
                     status: 500,
                     headers: {
                         'Content-Type': 'text/plain; charset=utf-8',
@@ -263,7 +273,7 @@ function buildSql(tableName, whereRaw, searchParams) {
             whereCondition = " where " + validatedSqlParts.join(" ");
         }
     } catch (error) {
-        return new Response(`SQL 构建失败。请联系管理员。`, {
+        return new Response(`服务器内部错误，这不是你的错。SQL 构建失败。请联系管理员。`, {
             status: 500,
             headers: {
                 'Content-Type': 'text/plain; charset=utf-8',

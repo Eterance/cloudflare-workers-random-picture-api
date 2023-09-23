@@ -29,10 +29,20 @@ export default {
         //return Response.json(env.DEFAULT_TABLES);
         var tableNamesArray = [];
         // 获取所有目前存在的表名
-        const tableNameRows = await env.PIC_DB.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name != '_cf_KV' AND name NOT LIKE 'sqlite_%';").all();
-        for (let index = 0; index < tableNameRows.results.length; index++) {
-            const tableNameRow = tableNameRows.results[index];
-            tableNamesArray.push(tableNameRow.name);
+        try{
+            const tableNameRows = await env.PIC_DB.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name != '_cf_KV' AND name NOT LIKE 'sqlite_%';").all();
+            for (let index = 0; index < tableNameRows.results.length; index++) {
+                const tableNameRow = tableNameRows.results[index];
+                tableNamesArray.push(tableNameRow.name);
+            }
+        }
+        catch{
+            return new Response('服务器内部错误，这不是你的错。请联系管理员：“你忘了绑定 D1 数据库至参数 PIC_DB ”', {
+                status: 500,
+                headers: {
+                    'Content-Type': 'text/plain; charset=utf-8',
+                },
+            });
         }
 
         let isHasTableName = false;
@@ -103,7 +113,7 @@ export default {
             className = env.DEFAULT_TABLE;
         }
         catch {
-            return new Response('请联系管理员：“你忘了设置参数 DEFAULT_TABLE ”', {
+            return new Response('服务器内部错误，这不是你的错。请联系管理员：“你忘了设置参数 DEFAULT_TABLE ”', {
                 status: 500,
                 headers: {
                     'Content-Type': 'text/plain; charset=utf-8',
@@ -122,12 +132,10 @@ export default {
             sql += ` WHERE ${validatedSqlParts.join(' and ')}`;
         }
         var rows
-        try
-        {
-            rows = await env.PIC_DB.prepare(sql).all();
+        try {
+            rows = await env.PIC_DB.prepare(sql).all()
         }
-        catch (error)
-        {
+        catch (error) {
             return new Response('SQL 查询失败。请先检查你的 SQL 是否有误；如果确认无误，请联系管理员。', {
                 status: 400,
                 headers: {
